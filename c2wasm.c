@@ -505,16 +505,17 @@ EM_JS(void ,c2wasm_start, (void), {
 
     window.c2wasm_get_string = function(c_str ){
         let str_array  = [];
-        let index = 0;
-        while (true){
-        let current_char = wasmExports.c2wasm_get_char(c_str,index);
-        if (current_char == 0){
-            break;
+
+        let size = wasmExports.c2wasm_get_str_size(c_str);
+        for(let i=0; i < size; i++){
+            let current_char = wasmExports.c2wasm_get_char(c_str,i);
+            str_array[i] = current_char; 
         }
-        str_array[index] = current_char; 
-        index++;
-        }
-        return String.fromCharCode.apply(null, str_array);
+        //iterate over str_array and print each char 
+
+        let decoder = new TextDecoder('utf-8');
+        let uint8Array = new Uint8Array(str_array);
+        return decoder.decode(uint8Array);
     };
     
     window.c2wasm_get_stack_point = function(){
@@ -878,9 +879,13 @@ c2wasm_js_var   c2wasm_create_function(c2wasm_js_var (*callback)()) {
 
 
 
-EMSCRIPTEN_KEEPALIVE char c2wasm_get_char(const char *str,int index) {
-    return str[index];
+EMSCRIPTEN_KEEPALIVE  unsigned char c2wasm_get_char(const char *str,int index) {
+    return (unsigned  char )str[index];
 }
+EMSCRIPTEN_KEEPALIVE int c2wasm_get_str_size(const char *str) {
+    return strlen(str);
+}
+
 EMSCRIPTEN_KEEPALIVE void c2wasm_set_char(char *str,int index,char value) {
     str[index] = value;
 }
